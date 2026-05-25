@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASPACHO - AI Interface</title>
+    <style>
+        /* --- ESTILOS BASE FUTURISTAS --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #050814;
+            color: #e0e6ed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            padding: 40px 20px;
+            overflow: hidden;
+            /* Cuadrícula sutil de fondo de interfaz tecnológica */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        header {
+            text-align: center;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 4px;
+            color: #00f3ff;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.6);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- CONTENEDOR CENTRAL: EL CEREBRO / ORBE --- */
+        .core-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Anillo Exterior */
+        .ring-outer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px dashed rgba(0, 243, 255, 0.2);
+            border-radius: 50%;
+            animation: rotateClockwise 20s linear infinite;
+        }
+
+        /* Anillo Intermedio */
+        .ring-mid {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border: 2px solid transparent;
+            border-top: 2px solid rgba(147, 51, 234, 0.4);
+            border-bottom: 2px solid rgba(147, 51, 234, 0.4);
+            border-radius: 50%;
+            animation: rotateCounterClockwise 10s linear infinite;
+        }
+
+        /* El Orbe Central Reactivo */
+        .orbe-core {
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, #00f3ff 0%, rgba(0, 10, 30, 0.8) 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
+            transition: all 0.5s ease;
+        }
+
+        /* --- ESTADOS DINÁMICOS DEL ORBE (ANIMACIONES) --- */
+        
+        /* En espera / Reposo */
+        .state-idle .orbe-core {
+            animation: pulseIdle 3s ease-in-out infinite;
+        }
+
+        /* Escuchando al Usuario (Microfono Activo) */
+        .state-listening .orbe-core {
+            background: radial-gradient(circle, #ff0077 0%, rgba(30, 0, 10, 0.8) 70%);
+            box-shadow: 0 0 60px #ff0077, inset 0 0 20px rgba(255, 255, 255, 0.6);
+            transform: scale(1.15);
+            animation: voiceWave 0.4s ease-in-out infinite alternate;
+        }
+        .state-listening .ring-outer {
+            border-color: rgba(255, 0, 119, 0.5);
+            animation-duration: 5s;
+        }
+
+        /* Pensando / Consultando a n8n */
+        .state-thinking .orbe-core {
+            background: radial-gradient(circle, #9333ea 0%, rgba(15, 0, 30, 0.8) 70%);
+            box-shadow: 0 0 50px #9333ea, inset 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: spinFast 1s linear infinite;
+        }
+        .state-thinking .ring-mid {
+            border-top-color: #9333ea;
+            border-bottom-color: #9333ea;
+            animation-duration: 2s;
+        }
+
+        /* Hablando (Reproduciendo Respuesta TTS) */
+        .state-speaking .orbe-core {
+            background: radial-gradient(circle, #00ff66 0%, rgba(0, 30, 10, 0.8) 70%);
+            box-shadow: 0 0 50px #00ff66, inset 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: voiceWave 0.2s ease-in-out infinite alternate;
+        }
+
+        /* --- CONTROLES Y PANTALLA DE TEXTO --- */
+        .console-container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .text-display {
+            background: rgba(10, 20, 40, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 80px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-bottom: 25px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #a1b0cb;
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+        }
+
+        .btn-mic {
+            background: transparent;
+            border: 2px solid #00f3ff;
+            color: #00f3ff;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            outline: none;
+        }
+
+        .btn-mic:hover {
+            background: #00f3ff;
+            color: #050814;
+            box-shadow: 0 0 25px #00f3ff;
+        }
+
+        .btn-mic:disabled {
+            border-color: #475569;
+            color: #475569;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* --- KEYFRAMES ANIMACIONES --- */
+        @keyframes rotateClockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes rotateCounterClockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+
+        @keyframes pulseIdle {
+            0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 30px rgba(0, 243, 255, 0.3); }
+            50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 50px rgba(0, 243, 255, 0.6); }
+            100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 30px rgba(0, 243, 255, 0.3); }
+        }
+
+        @keyframes voiceWave {
+            0% { transform: scale(1.05); }
+            100% { transform: scale(1.15); }
+        }
+
+        @keyframes spinFast {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(0.95); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GASPACHO</h1>
+        <p>Sistema de Control e Históricos - Cargomobility</p>
+    </header>
+
+    <div id="visualCoreContainer" class="core-container state-idle">
+        <div class="ring-outer"></div>
+        <div class="ring-mid"></div>
+        <div class="orbe-core"></div>
+    </div>
+
+    <div class="console-container">
+        <div id="textDisplay" class="text-display">Sistema listo. Presiona el botón para consultar...</div>
+        
+        <button id="btnMic" class="btn-mic">Hablar con Gaspacho</button>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN: Reemplaza con tu Webhook de n8n real
+        const N8N_WEBHOOK_URL = 'https://tu-instancia-n8n.com/webhook/gaspacho-ai';
+
+        const btnMic = document.getElementById('btnMic');
+        const textDisplay = document.getElementById('textDisplay');
+        const visualCore = document.getElementById('visualCoreContainer');
+
+        // Comprobación de compatibilidad de APIs en el navegador
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const synth = window.speechSynthesis;
+
+        if (!SpeechRecognition) {
+            textDisplay.innerHTML = "Error: Este navegador no soporta reconocimiento de voz nativo. Usa Google Chrome o Edge.";
+            btnMic.disabled = true;
+        }
+
+        let recognition = new SpeechRecognition();
+        recognition.lang = 'es-CL'; // Configurado para español de Chile
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        // --- MANEJO DE ESTADOS DE LA INTERFAZ ---
+        function changeState(state) {
+            visualCore.className = 'core-container'; // Limpia clases
+            if (state === 'idle') visualCore.classList.add('state-idle');
+            if (state === 'listening') visualCore.classList.add('state-listening');
+            if (state === 'thinking') visualCore.classList.add('state-thinking');
+            if (state === 'speaking') visualCore.classList.add('state-speaking');
+        }
+
+        // --- EVENTO: PRESIONAR BOTÓN ---
+        btnMic.addEventListener('click', () => {
+            // Detener cualquier locución previa activa antes de escuchar de nuevo
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            
+            try {
+                recognition.start();
+            } catch (e) {
+                console.log("El reconocimiento ya estaba iniciado");
+            }
+        });
+
+        // Al empezar a escuchar
+        recognition.onstart = () => {
+            changeState('listening');
+            textDisplay.innerText = "Escuchando...";
+            btnMic.innerText = "Escuchando...";
+        };
+
+        // Si ocurre un error al capturar el audio
+        recognition.onerror = (event) => {
+            console.error(event.error);
+            changeState('idle');
+            textDisplay.innerText = "No logré escucharte con claridad. Intenta de nuevo.";
+            btnMic.innerText = "Hablar con Gaspacho";
+        };
+
+        // Al finalizar la captura de voz (el usuario guardó silencio)
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
+
+        // --- PROCESAMIENTO DEL RESULTADO (VOZ A TEXTO) ---
+        recognition.onresult = async (event) => {
+            const transcript = event.results[0][0].transcript;
+            textDisplay.innerText = `Tú: "${transcript}"`;
+            
+            // Pasamos al estado de procesamiento
+            changeState('thinking');
+            btnMic.innerText = "Procesando...";
+
+            // Enviar la pregunta capturada a n8n
+            await consultarGaspachoN8N(transcript);
+        };
+
+        // --- COMUNICACIÓN CON EL WEBHOOK DE n8n ---
+        async function consultarGaspachoN8N(preguntaUsuario) {
+            try {
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        query: preguntaUsuario,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+                const data = await response.json();
+                
+                // Suponiendo que tu n8n devuelve un JSON estructurado así: { "output": "Texto de la IA" }
+                // Modifica 'data.output' según cómo esté estructurada la salida de tu nodo final en n8n
+                const respuestaIA = data.output || data.response || "No recibí una estructura de texto clara desde el servidor de datos.";
+
+                textDisplay.innerText = `Gaspacho: ${respuestaIA}`;
+                
+                // Hablar la respuesta
+                hablarRespuesta(respuestaIA);
+
+            } catch (error) {
+                console.error(error);
+                changeState('idle');
+                textDisplay.innerText = "Error de conexión con el núcleo de datos de n8n.";
+                btnMic.innerText = "Hablar con Gaspacho";
+            }
+        }
+
+        // --- FUNCIÓN SÍNTESIS DE VOZ (TEXTO A VOZ - TTS) ---
+        function hablarRespuesta(texto) {
+            if (!synth) return;
+
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-CL'; // Idioma de salida
+
+            // Buscar una voz en español que suene natural si está disponible en el sistema
+            const voices = synth.getVoices();
+            const vozEspañol = voices.find(voice => voice.lang.includes('es'));
+            if (vozEspañol) {
+                utterance.voice = vozEspañol;
+            }
+
+            // Configuración sutil del tono del robot/IA
+            utterance.pitch = 0.95; // Un tono ligeramente más robusto/corporativo
+            utterance.rate = 1.0;  // Velocidad normal de lectura
+
+            utterance.onstart = () => {
+                changeState('speaking');
+                btnMic.innerText = "Hablando...";
+            };
+
+            utterance.onend = () => {
+                changeState('idle');
+                btnMic.innerText = "Hablar con Gaspacho";
+            };
+
+            utterance.onerror = () => {
+                changeState('idle');
+                btnMic.innerText = "Hablar con Gaspacho";
+            };
+
+            // Ejecutar la acción de hablar
+            synth.speak(utterance);
+        }
+
+        // Carga inicial de voces del sistema (Fix para algunos navegadores)
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = speechSynthesis.getVoices;
+        }
+    </script>
+</body>
+</html>
