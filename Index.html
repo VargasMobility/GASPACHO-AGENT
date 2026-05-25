@@ -20,11 +20,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            height: 100vh;
+            min-height: 100vh;
             padding: 40px 20px;
             overflow: hidden;
-            /* Cuadrícula sutil de fondo de interfaz tecnológica */
-            background-image: 
+            background-image:
                 linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
             background-size: 30px 30px;
@@ -52,15 +51,20 @@
 
         /* --- CONTENEDOR CENTRAL: EL CEREBRO / ORBE --- */
         .core-container {
+            --audioScale: 1;
+            --audioSkew: 0deg;
+            --audioGlow: 0.5;
+            --audioBlur: 0px;
             position: relative;
             width: 300px;
             height: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 18px 0;
+            filter: drop-shadow(0 0 calc(20px * var(--audioGlow)) rgba(0, 243, 255, 0.32));
         }
 
-        /* Anillo Exterior */
         .ring-outer {
             position: absolute;
             width: 100%;
@@ -70,7 +74,6 @@
             animation: rotateClockwise 20s linear infinite;
         }
 
-        /* Anillo Intermedio */
         .ring-mid {
             position: absolute;
             width: 80%;
@@ -82,58 +85,109 @@
             animation: rotateCounterClockwise 10s linear infinite;
         }
 
-        /* El Orbe Central Reactivo */
         .orbe-core {
             width: 50%;
             height: 50%;
             background: radial-gradient(circle, #00f3ff 0%, rgba(0, 10, 30, 0.8) 70%);
             border-radius: 50%;
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
-            transition: all 0.5s ease;
+            transition: all 0.18s ease;
+            transform: scale(var(--audioScale)) skew(var(--audioSkew));
+            filter: blur(var(--audioBlur));
         }
 
-        /* --- ESTADOS DINÁMICOS DEL ORBE (ANIMACIONES) --- */
-        
-        /* En espera / Reposo */
+        .audio-tuner {
+            position: absolute;
+            width: 210px;
+            height: 66px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .audio-tuner span {
+            width: 8px;
+            height: 12px;
+            border-radius: 10px 10px 2px 2px;
+            background: linear-gradient(180deg, #00ff66 0%, #00f3ff 100%);
+            box-shadow: 0 0 14px rgba(0, 255, 102, 0.7);
+            transform-origin: bottom;
+        }
+
+        .state-speaking .audio-tuner {
+            opacity: 1;
+        }
+
+        .state-speaking .audio-tuner span:nth-child(1) { animation: barVoice 0.34s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(2) { animation: barVoice 0.27s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(3) { animation: barVoice 0.22s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(4) { animation: barVoice 0.30s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(5) { animation: barVoice 0.25s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(6) { animation: barVoice 0.32s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(7) { animation: barVoice 0.24s ease-in-out infinite alternate; }
+        .state-speaking .audio-tuner span:nth-child(8) { animation: barVoice 0.29s ease-in-out infinite alternate; }
+
+        /* --- ESTADOS DINÁMICOS DEL ORBE --- */
         .state-idle .orbe-core {
             animation: pulseIdle 3s ease-in-out infinite;
         }
 
-        /* Escuchando al Usuario (Microfono Activo) */
         .state-listening .orbe-core {
             background: radial-gradient(circle, #ff0077 0%, rgba(30, 0, 10, 0.8) 70%);
             box-shadow: 0 0 60px #ff0077, inset 0 0 20px rgba(255, 255, 255, 0.6);
             transform: scale(1.15);
             animation: voiceWave 0.4s ease-in-out infinite alternate;
         }
+
         .state-listening .ring-outer {
             border-color: rgba(255, 0, 119, 0.5);
             animation-duration: 5s;
         }
 
-        /* Pensando / Consultando a n8n */
         .state-thinking .orbe-core {
             background: radial-gradient(circle, #9333ea 0%, rgba(15, 0, 30, 0.8) 70%);
             box-shadow: 0 0 50px #9333ea, inset 0 0 20px rgba(255, 255, 255, 0.5);
             animation: spinFast 1s linear infinite;
         }
+
         .state-thinking .ring-mid {
             border-top-color: #9333ea;
             border-bottom-color: #9333ea;
             animation-duration: 2s;
         }
 
-        /* Hablando (Reproduciendo Respuesta TTS) */
         .state-speaking .orbe-core {
             background: radial-gradient(circle, #00ff66 0%, rgba(0, 30, 10, 0.8) 70%);
-            box-shadow: 0 0 50px #00ff66, inset 0 0 20px rgba(255, 255, 255, 0.5);
-            animation: voiceWave 0.2s ease-in-out infinite alternate;
+            box-shadow:
+                0 0 calc(42px * var(--audioGlow)) #00ff66,
+                0 0 calc(90px * var(--audioGlow)) rgba(0, 243, 255, 0.45),
+                inset 0 0 24px rgba(255, 255, 255, 0.55);
+            border-radius: 45% 55% 52% 48% / 48% 44% 56% 52%;
+            animation: voiceWave 0.2s ease-in-out infinite alternate, morphCore 0.9s ease-in-out infinite;
+        }
+
+        .state-speaking .ring-outer {
+            border-color: rgba(0, 255, 102, 0.45);
+            animation-duration: 4s;
+        }
+
+        .state-speaking .ring-mid {
+            border-top-color: rgba(0, 255, 102, 0.8);
+            border-bottom-color: rgba(0, 243, 255, 0.8);
+            animation-duration: 1.2s;
         }
 
         /* --- CONTROLES Y PANTALLA DE TEXTO --- */
         .console-container {
             width: 100%;
-            max-width: 600px;
+            max-width: 760px;
             text-align: center;
             z-index: 10;
         }
@@ -142,11 +196,11 @@
             background: rgba(10, 20, 40, 0.6);
             border: 1px solid rgba(0, 243, 255, 0.1);
             border-radius: 8px;
-            padding: 20px;
-            min-height: 80px;
-            max-height: 120px;
+            padding: 16px;
+            min-height: 62px;
+            max-height: 100px;
             overflow-y: auto;
-            margin-bottom: 25px;
+            margin-bottom: 18px;
             font-size: 1rem;
             line-height: 1.5;
             color: #a1b0cb;
@@ -182,20 +236,22 @@
             box-shadow: none;
         }
 
-
         /* --- GLOBOS DE COMUNICACIÓN TIPO CÓMIC --- */
         .bubble-panel {
             display: flex;
             flex-direction: column;
             gap: 12px;
             margin-bottom: 18px;
+            max-height: 290px;
+            overflow-y: auto;
+            padding: 4px 6px 8px 6px;
         }
 
         .speech-bubble {
             display: none;
             position: relative;
             text-align: left;
-            padding: 16px 18px;
+            padding: 16px 46px 16px 18px;
             border-radius: 22px;
             line-height: 1.5;
             white-space: pre-line;
@@ -239,6 +295,31 @@
             border-color: rgba(255, 255, 255, 0.96) transparent transparent transparent;
         }
 
+        .bubble-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid rgba(15, 23, 42, 0.18);
+            background: rgba(15, 23, 42, 0.08);
+            color: inherit;
+            font-size: 18px;
+            line-height: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .bubble-close:hover {
+            transform: scale(1.08);
+            background: rgba(239, 68, 68, 0.14);
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+
         .status-line {
             font-size: 0.85rem;
             color: #64748b;
@@ -251,7 +332,6 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* --- KEYFRAMES ANIMACIONES --- */
         @keyframes rotateClockwise {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -278,6 +358,27 @@
             50% { transform: rotate(180deg) scale(0.95); }
             100% { transform: rotate(360deg) scale(1); }
         }
+
+        @keyframes barVoice {
+            0% { transform: scaleY(0.45); opacity: 0.55; }
+            100% { transform: scaleY(3.4); opacity: 1; }
+        }
+
+        @keyframes morphCore {
+            0% { border-radius: 45% 55% 52% 48% / 48% 44% 56% 52%; }
+            33% { border-radius: 54% 46% 42% 58% / 51% 57% 43% 49%; }
+            66% { border-radius: 39% 61% 56% 44% / 58% 39% 61% 42%; }
+            100% { border-radius: 45% 55% 52% 48% / 48% 44% 56% 52%; }
+        }
+
+        @media (max-width: 760px) {
+            body { padding: 26px 14px; }
+            header h1 { font-size: 2rem; }
+            .core-container { width: 240px; height: 240px; }
+            .console-container { max-width: 100%; }
+            .bubble-panel { max-height: 310px; }
+            .btn-mic { width: 100%; padding: 14px 18px; }
+        }
     </style>
 </head>
 <body>
@@ -291,17 +392,27 @@
         <div class="ring-outer"></div>
         <div class="ring-mid"></div>
         <div class="orbe-core"></div>
+        <div class="audio-tuner" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
     </div>
 
     <div class="console-container">
-        <div class="bubble-panel" aria-live="polite">
-            <div id="userBubble" class="speech-bubble user"></div>
-            <div id="gaspachoBubble" class="speech-bubble gaspacho"></div>
+        <div class="bubble-panel" id="bubblePanel">
+            <div id="userBubble" class="speech-bubble user">
+                <button class="bubble-close" type="button" aria-label="Cerrar mensaje" onclick="cerrarBurbuja('user')">×</button>
+                <span id="userBubbleText"></span>
+            </div>
+            <div id="gaspachoBubble" class="speech-bubble gaspacho">
+                <button class="bubble-close" type="button" aria-label="Cerrar respuesta" onclick="cerrarBurbuja('gaspacho')">×</button>
+                <span id="gaspachoBubbleText"></span>
+            </div>
         </div>
 
         <div id="statusLine" class="status-line">Esperando comando...</div>
         <div id="textDisplay" class="text-display">Sistema listo. Presiona el botón para consultar...</div>
-        
+
         <button id="btnMic" class="btn-mic">Hablar con Gaspacho</button>
     </div>
 
@@ -310,101 +421,141 @@
         // Para pruebas con "Listen for test event", cambia USE_TEST_WEBHOOK a true.
         // Para uso real desde GitHub Pages, publica/activa el workflow en n8n y deja USE_TEST_WEBHOOK en false.
         const USE_TEST_WEBHOOK = false;
-        
+
         const N8N_WEBHOOK_TEST_URL = 'https://gaspachoai.app.n8n.cloud/webhook-test/gaspacho-web';
         const N8N_WEBHOOK_PROD_URL = 'https://gaspachoai.app.n8n.cloud/webhook/gaspacho-web';
-        
+
         const N8N_WEBHOOK_URL = USE_TEST_WEBHOOK
-          ? N8N_WEBHOOK_TEST_URL
-          : N8N_WEBHOOK_PROD_URL;
+            ? N8N_WEBHOOK_TEST_URL
+            : N8N_WEBHOOK_PROD_URL;
+
         const btnMic = document.getElementById('btnMic');
         const textDisplay = document.getElementById('textDisplay');
         const userBubble = document.getElementById('userBubble');
+        const userBubbleText = document.getElementById('userBubbleText');
         const gaspachoBubble = document.getElementById('gaspachoBubble');
+        const gaspachoBubbleText = document.getElementById('gaspachoBubbleText');
         const statusLine = document.getElementById('statusLine');
         const visualCore = document.getElementById('visualCoreContainer');
 
-        // Comprobación de compatibilidad de APIs en el navegador
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const synth = window.speechSynthesis;
 
+        let recognition = null;
+        let voicePulseTimer = null;
+
         if (!SpeechRecognition) {
-            textDisplay.innerHTML = "Error: Este navegador no soporta reconocimiento de voz nativo. Usa Google Chrome o Edge.";
+            textDisplay.innerHTML = 'Error: Este navegador no soporta reconocimiento de voz nativo. Usa Google Chrome o Edge.';
             btnMic.disabled = true;
+        } else {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-CL';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
         }
 
-        let recognition = new SpeechRecognition();
-        recognition.lang = 'es-CL'; // Configurado para español de Chile
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        // --- MANEJO DE ESTADOS DE LA INTERFAZ ---
         function changeState(state) {
-            visualCore.className = 'core-container'; // Limpia clases
+            visualCore.className = 'core-container';
             if (state === 'idle') visualCore.classList.add('state-idle');
             if (state === 'listening') visualCore.classList.add('state-listening');
             if (state === 'thinking') visualCore.classList.add('state-thinking');
             if (state === 'speaking') visualCore.classList.add('state-speaking');
         }
 
-        // --- EVENTO: PRESIONAR BOTÓN ---
+        function resetVoiceVisuals() {
+            stopVoicePulse();
+            visualCore.style.setProperty('--audioScale', '1');
+            visualCore.style.setProperty('--audioSkew', '0deg');
+            visualCore.style.setProperty('--audioGlow', '0.5');
+            visualCore.style.setProperty('--audioBlur', '0px');
+        }
+
+        function startVoicePulse() {
+            stopVoicePulse();
+            voicePulseTimer = setInterval(() => {
+                const scale = (1.03 + Math.random() * 0.22).toFixed(2);
+                const skew = ((Math.random() - 0.5) * 7).toFixed(2) + 'deg';
+                const glow = (0.7 + Math.random() * 0.95).toFixed(2);
+                const blur = (Math.random() * 0.7).toFixed(2) + 'px';
+
+                visualCore.style.setProperty('--audioScale', scale);
+                visualCore.style.setProperty('--audioSkew', skew);
+                visualCore.style.setProperty('--audioGlow', glow);
+                visualCore.style.setProperty('--audioBlur', blur);
+            }, 120);
+        }
+
+        function stopVoicePulse() {
+            if (voicePulseTimer) {
+                clearInterval(voicePulseTimer);
+                voicePulseTimer = null;
+            }
+        }
+
         btnMic.addEventListener('click', () => {
-            // Detener cualquier locución previa activa antes de escuchar de nuevo
+            if (!recognition) return;
+
             if (synth && synth.speaking) {
                 synth.cancel();
+                resetVoiceVisuals();
             }
-            
+
             try {
                 recognition.start();
             } catch (e) {
-                console.log("El reconocimiento ya estaba iniciado");
+                console.log('El reconocimiento ya estaba iniciado');
             }
         });
 
-        // Al empezar a escuchar
-        recognition.onstart = () => {
-            changeState('listening');
-            textDisplay.innerText = "Escuchando...";
-            setStatus("Escuchando comando...");
-            btnMic.innerText = "Escuchando...";
-        };
+        if (recognition) {
+            recognition.onstart = () => {
+                changeState('listening');
+                textDisplay.innerText = 'Escuchando...';
+                setStatus('Escuchando comando...');
+                btnMic.innerText = 'Escuchando...';
+                btnMic.disabled = true;
+            };
 
-        // Si ocurre un error al capturar el audio
-        recognition.onerror = (event) => {
-            console.error(event.error);
-            changeState('idle');
-            textDisplay.innerText = "No logré escucharte con claridad. Intenta de nuevo.";
-            setStatus("No se pudo capturar audio.");
-            btnMic.disabled = false;
-            btnMic.innerText = "Hablar con Gaspacho";
-        };
+            recognition.onerror = (event) => {
+                console.error(event.error);
+                changeState('idle');
+                textDisplay.innerText = 'No logré escucharte con claridad. Intenta de nuevo.';
+                setStatus('No se pudo capturar audio.');
+                btnMic.disabled = false;
+                btnMic.innerText = 'Hablar con Gaspacho';
+            };
 
-        // Al finalizar la captura de voz (el usuario guardó silencio)
-        recognition.onspeechend = () => {
-            recognition.stop();
-        };
+            recognition.onspeechend = () => {
+                recognition.stop();
+            };
 
-        // --- PROCESAMIENTO DEL RESULTADO (VOZ A TEXTO) ---
-        recognition.onresult = async (event) => {
-            const transcript = event.results[0][0].transcript;
-            mostrarPreguntaUsuario(transcript);
-            
-            // Pasamos al estado de procesamiento
-            changeState('thinking');
-            setStatus("Procesando consulta con n8n...");
-            btnMic.innerText = "Procesando...";
+            recognition.onend = () => {
+                if (btnMic.innerText === 'Escuchando...') {
+                    btnMic.disabled = false;
+                    btnMic.innerText = 'Hablar con Gaspacho';
+                    changeState('idle');
+                }
+            };
 
-            // Enviar la pregunta capturada a n8n
-            await consultarGaspachoN8N(transcript);
-        };
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                mostrarPreguntaUsuario(transcript);
 
-        // --- COMUNICACIÓN CON EL WEBHOOK DE n8n ---
+                changeState('thinking');
+                setStatus('Procesando consulta...');
+                btnMic.innerText = 'Procesando...';
+                btnMic.disabled = true;
+
+                await consultarGaspachoN8N(transcript);
+            };
+        }
+
         async function consultarGaspachoN8N(preguntaUsuario) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 90000);
 
             try {
-                setStatus("Consultando núcleo n8n...");
+                setStatus('Consultando núcleo n8n...');
                 btnMic.disabled = true;
 
                 const response = await fetch(N8N_WEBHOOK_URL, {
@@ -429,10 +580,6 @@
 
                 const data = await response.json();
 
-                if (data && data.ok === false) {
-                    throw new Error(data.error || 'n8n devolvió ok=false');
-                }
-
                 const respuestaIA =
                     data.respuesta ||
                     data.output ||
@@ -453,24 +600,63 @@
                     : 'Error de conexión con el núcleo de datos de n8n.';
 
                 changeState('idle');
+                resetVoiceVisuals();
                 setStatus('Error de conexión.');
                 mostrarRespuestaGaspacho(mensajeError);
                 btnMic.disabled = false;
-                btnMic.innerText = "Hablar con Gaspacho";
+                btnMic.innerText = 'Hablar con Gaspacho';
             }
         }
 
         function mostrarPreguntaUsuario(texto) {
-            userBubble.innerText = `Tú: ${texto}`;
-            userBubble.style.display = 'block';
+            if (userBubbleText && userBubble) {
+                userBubbleText.innerText = `Tú: ${texto}`;
+                userBubble.style.display = 'block';
+            }
             textDisplay.innerText = `Comando recibido: "${texto}"`;
         }
 
+        function limpiarTextoParaPantalla(texto) {
+            return String(texto || '')
+                .replace(/^#{1,6}\s*/gm, '')
+                .replace(/\*\*/g, '')
+                .replace(/`/g, '')
+                .replace(/^\s*[-•]\s+/gm, '• ')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+        }
+
         function mostrarRespuestaGaspacho(texto) {
-            gaspachoBubble.innerText = `Gaspacho:\n${texto}`;
-            gaspachoBubble.style.display = 'block';
-            textDisplay.innerText = "Respuesta recibida desde Gaspacho.";
-            setStatus("Respuesta lista.");
+            const textoPantalla = limpiarTextoParaPantalla(texto);
+            if (gaspachoBubbleText && gaspachoBubble) {
+                gaspachoBubbleText.innerText = `Gaspacho:\n${textoPantalla}`;
+                gaspachoBubble.style.display = 'block';
+            }
+            textDisplay.innerText = 'Respuesta recibida desde Gaspacho.';
+            setStatus('Respuesta lista.');
+        }
+
+        function cerrarBurbuja(tipo) {
+            if (tipo === 'user' && userBubble) {
+                userBubble.style.display = 'none';
+                if (userBubbleText) userBubbleText.innerText = '';
+            }
+
+            if (tipo === 'gaspacho' && gaspachoBubble) {
+                gaspachoBubble.style.display = 'none';
+                if (gaspachoBubbleText) gaspachoBubbleText.innerText = '';
+            }
+
+            if (synth && synth.speaking) {
+                synth.cancel();
+            }
+
+            resetVoiceVisuals();
+            changeState('idle');
+            setStatus('Esperando comando...');
+            textDisplay.innerText = 'Sistema listo. Presiona el botón para consultar...';
+            btnMic.disabled = false;
+            btnMic.innerText = 'Hablar con Gaspacho';
         }
 
         function setStatus(texto) {
@@ -479,63 +665,78 @@
 
         function limpiarTextoParaVoz(texto) {
             return String(texto || '')
-                .replace(/#{1,6}\s/g, '')
+                .replace(/^#{1,6}\s*/gm, '')
+                .replace(/#{1,6}/g, '')
                 .replace(/\*\*/g, '')
                 .replace(/\*/g, '')
                 .replace(/`/g, '')
-                .replace(/^- /gm, '')
+                .replace(/^\s*[-•]\s+/gm, '')
+                .replace(/^\s*\d+\.\s+/gm, '')
+                .replace(/---+/g, ' ')
+                .replace(/___+/g, ' ')
+                .replace(/_/g, ' ')
+                .replace(/\|/g, ' ')
                 .replace(/\n{2,}/g, '. ')
                 .replace(/\n/g, '. ')
                 .replace(/\s{2,}/g, ' ')
                 .trim();
         }
 
-        // --- FUNCIÓN SÍNTESIS DE VOZ (TEXTO A VOZ - TTS) ---
         function hablarRespuesta(texto) {
-            if (!synth) return;
+            if (!synth) {
+                btnMic.disabled = false;
+                btnMic.innerText = 'Hablar con Gaspacho';
+                return;
+            }
 
             const textoVoz = limpiarTextoParaVoz(texto);
             const utterance = new SpeechSynthesisUtterance(textoVoz);
-            utterance.lang = 'es-CL'; // Idioma de salida
+            utterance.lang = 'es-CL';
 
-            // Buscar una voz en español que suene natural si está disponible en el sistema
             const voices = synth.getVoices();
-            const vozEspañol = voices.find(voice => voice.lang.includes('es'));
-            if (vozEspañol) {
-                utterance.voice = vozEspañol;
+            const vozEspanol = voices.find(voice => voice.lang && voice.lang.toLowerCase().includes('es'));
+            if (vozEspanol) {
+                utterance.voice = vozEspanol;
             }
 
-            // Configuración sutil del tono del robot/IA
-            utterance.pitch = 0.95; // Un tono ligeramente más robusto/corporativo
-            utterance.rate = 1.0;  // Velocidad normal de lectura
+            utterance.pitch = 0.95;
+            utterance.rate = 1.0;
 
             utterance.onstart = () => {
                 changeState('speaking');
-                setStatus("Gaspacho respondiendo por voz...");
-                btnMic.innerText = "Hablando...";
+                startVoicePulse();
+                setStatus('Gaspacho respondiendo por voz...');
+                btnMic.innerText = 'Hablando...';
+                btnMic.disabled = true;
+            };
+
+            utterance.onboundary = () => {
+                visualCore.style.setProperty('--audioScale', (1.08 + Math.random() * 0.2).toFixed(2));
+                visualCore.style.setProperty('--audioGlow', (0.9 + Math.random() * 1.0).toFixed(2));
             };
 
             utterance.onend = () => {
+                resetVoiceVisuals();
                 changeState('idle');
-                setStatus("Esperando comando...");
+                setStatus('Esperando comando...');
                 btnMic.disabled = false;
-                btnMic.innerText = "Hablar con Gaspacho";
+                btnMic.innerText = 'Hablar con Gaspacho';
             };
 
             utterance.onerror = () => {
+                resetVoiceVisuals();
                 changeState('idle');
-                setStatus("Error al reproducir voz.");
+                setStatus('Error al reproducir voz.');
                 btnMic.disabled = false;
-                btnMic.innerText = "Hablar con Gaspacho";
+                btnMic.innerText = 'Hablar con Gaspacho';
             };
 
-            // Ejecutar la acción de hablar
+            synth.cancel();
             synth.speak(utterance);
         }
 
-        // Carga inicial de voces del sistema (Fix para algunos navegadores)
         if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = speechSynthesis.getVoices;
+            speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
         }
     </script>
 </body>
