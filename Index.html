@@ -182,6 +182,75 @@
             box-shadow: none;
         }
 
+
+        /* --- GLOBOS DE COMUNICACIÓN TIPO CÓMIC --- */
+        .bubble-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .speech-bubble {
+            display: none;
+            position: relative;
+            text-align: left;
+            padding: 16px 18px;
+            border-radius: 22px;
+            line-height: 1.5;
+            white-space: pre-line;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
+            animation: bubbleIn 0.25s ease-out;
+        }
+
+        .speech-bubble.user {
+            align-self: flex-end;
+            max-width: 88%;
+            background: rgba(0, 243, 255, 0.12);
+            border: 1px solid rgba(0, 243, 255, 0.35);
+            color: #d8fbff;
+        }
+
+        .speech-bubble.user::after {
+            content: "";
+            position: absolute;
+            right: 22px;
+            bottom: -10px;
+            border-width: 10px 0 0 12px;
+            border-style: solid;
+            border-color: transparent transparent transparent rgba(0, 243, 255, 0.35);
+        }
+
+        .speech-bubble.gaspacho {
+            align-self: flex-start;
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            color: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.72);
+        }
+
+        .speech-bubble.gaspacho::after {
+            content: "";
+            position: absolute;
+            left: 22px;
+            bottom: -10px;
+            border-width: 10px 12px 0 0;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.96) transparent transparent transparent;
+        }
+
+        .status-line {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
+
+        @keyframes bubbleIn {
+            from { transform: translateY(8px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         /* --- KEYFRAMES ANIMACIONES --- */
         @keyframes rotateClockwise {
             from { transform: rotate(0deg); }
@@ -232,10 +301,20 @@
 
     <script>
         // CONFIGURACIÓN: Reemplaza con tu Webhook de n8n real
-        const N8N_WEBHOOK_URL = 'https://tu-instancia-n8n.com/webhook/gaspacho-ai';
+        // CONFIGURACIÓN WEBHOOK N8N
+        // Para pruebas con "Listen for test event", cambia USE_TEST_WEBHOOK a true.
+        // Para uso real desde GitHub Pages, publica/activa el workflow en n8n y deja USE_TEST_WEBHOOK en false.
+        const USE_TEST_WEBHOOK = false;
+
+        const N8N_WEBHOOK_TEST_URL = 'https://gaspachoai.app.n8n.cloud/webhook-test/gaspacho-web';
+        const N8N_WEBHOOK_PROD_URL = 'https://gaspachoai.app.n8n.cloud/webhook/gaspacho-web';
+        const N8N_WEBHOOK_URL = USE_TEST_WEBHOOK ? N8N_WEBHOOK_TEST_URL : N8N_WEBHOOK_PROD_URL;
 
         const btnMic = document.getElementById('btnMic');
         const textDisplay = document.getElementById('textDisplay');
+        const userBubble = document.getElementById('userBubble');
+        const gaspachoBubble = document.getElementById('gaspachoBubble');
+        const statusLine = document.getElementById('statusLine');
         const visualCore = document.getElementById('visualCoreContainer');
 
         // Comprobación de compatibilidad de APIs en el navegador
@@ -279,6 +358,7 @@
         recognition.onstart = () => {
             changeState('listening');
             textDisplay.innerText = "Escuchando...";
+            setStatus("Escuchando comando...");
             btnMic.innerText = "Escuchando...";
         };
 
@@ -287,6 +367,8 @@
             console.error(event.error);
             changeState('idle');
             textDisplay.innerText = "No logré escucharte con claridad. Intenta de nuevo.";
+            setStatus("No se pudo capturar audio.");
+            btnMic.disabled = false;
             btnMic.innerText = "Hablar con Gaspacho";
         };
 
@@ -310,44 +392,98 @@
 
         // --- COMUNICACIÓN CON EL WEBHOOK DE n8n ---
         async function consultarGaspachoN8N(preguntaUsuario) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 90000);
+
             try {
+                setStatus("Consultando núcleo n8n...");
+                btnMic.disabled = true;
+
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json; charset=utf-8'
                     },
-                    body: JSON.stringify({ 
-                        query: preguntaUsuario,
+                    body: JSON.stringify({
+                        mensaje: preguntaUsuario,
+                        usuario: 'Andres',
+                        canal: 'web_gaspacho',
                         timestamp: new Date().toISOString()
-                    })
+                    }),
+                    signal: controller.signal
                 });
 
-                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+                }
 
                 const data = await response.json();
-                
-                // Suponiendo que tu n8n devuelve un JSON estructurado así: { "output": "Texto de la IA" }
-                // Modifica 'data.output' según cómo esté estructurada la salida de tu nodo final en n8n
-                const respuestaIA = data.output || data.response || "No recibí una estructura de texto clara desde el servidor de datos.";
 
-                textDisplay.innerText = `Gaspacho: ${respuestaIA}`;
-                
-                // Hablar la respuesta
+                const respuestaIA =
+                    data.respuesta ||
+                    data.output ||
+                    data.response ||
+                    data.text ||
+                    data.message ||
+                    'No recibí una respuesta clara desde el núcleo de datos.';
+
+                mostrarRespuestaGaspacho(respuestaIA);
                 hablarRespuesta(respuestaIA);
 
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error(error);
+
+                const mensajeError = error.name === 'AbortError'
+                    ? 'La consulta tardó demasiado. Intenta nuevamente.'
+                    : 'Error de conexión con el núcleo de datos de n8n.';
+
                 changeState('idle');
-                textDisplay.innerText = "Error de conexión con el núcleo de datos de n8n.";
+                setStatus('Error de conexión.');
+                mostrarRespuestaGaspacho(mensajeError);
+                btnMic.disabled = false;
                 btnMic.innerText = "Hablar con Gaspacho";
             }
+        }
+
+        function mostrarPreguntaUsuario(texto) {
+            userBubble.innerText = `Tú: ${texto}`;
+            userBubble.style.display = 'block';
+            textDisplay.innerText = `Comando recibido: "${texto}"`;
+        }
+
+        function mostrarRespuestaGaspacho(texto) {
+            gaspachoBubble.innerText = `Gaspacho:\n${texto}`;
+            gaspachoBubble.style.display = 'block';
+            textDisplay.innerText = "Respuesta recibida desde Gaspacho.";
+            setStatus("Respuesta lista.");
+        }
+
+        function setStatus(texto) {
+            if (statusLine) statusLine.innerText = texto;
+        }
+
+        function limpiarTextoParaVoz(texto) {
+            return String(texto || '')
+                .replace(/#{1,6}\s/g, '')
+                .replace(/\*\*/g, '')
+                .replace(/\*/g, '')
+                .replace(/`/g, '')
+                .replace(/^- /gm, '')
+                .replace(/\n{2,}/g, '. ')
+                .replace(/\n/g, '. ')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
         }
 
         // --- FUNCIÓN SÍNTESIS DE VOZ (TEXTO A VOZ - TTS) ---
         function hablarRespuesta(texto) {
             if (!synth) return;
 
-            const utterance = new SpeechSynthesisUtterance(texto);
+            const textoVoz = limpiarTextoParaVoz(texto);
+            const utterance = new SpeechSynthesisUtterance(textoVoz);
             utterance.lang = 'es-CL'; // Idioma de salida
 
             // Buscar una voz en español que suene natural si está disponible en el sistema
@@ -363,16 +499,21 @@
 
             utterance.onstart = () => {
                 changeState('speaking');
+                setStatus("Gaspacho respondiendo por voz...");
                 btnMic.innerText = "Hablando...";
             };
 
             utterance.onend = () => {
                 changeState('idle');
+                setStatus("Esperando comando...");
+                btnMic.disabled = false;
                 btnMic.innerText = "Hablar con Gaspacho";
             };
 
             utterance.onerror = () => {
                 changeState('idle');
+                setStatus("Error al reproducir voz.");
+                btnMic.disabled = false;
                 btnMic.innerText = "Hablar con Gaspacho";
             };
 
