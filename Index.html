@@ -294,17 +294,22 @@
     </div>
 
     <div class="console-container">
+        <div class="bubble-panel" aria-live="polite">
+            <div id="userBubble" class="speech-bubble user"></div>
+            <div id="gaspachoBubble" class="speech-bubble gaspacho"></div>
+        </div>
+
+        <div id="statusLine" class="status-line">Esperando comando...</div>
         <div id="textDisplay" class="text-display">Sistema listo. Presiona el botón para consultar...</div>
         
         <button id="btnMic" class="btn-mic">Hablar con Gaspacho</button>
     </div>
 
     <script>
-        // CONFIGURACIÓN: Reemplaza con tu Webhook de n8n real
         // CONFIGURACIÓN WEBHOOK N8N
         // Para pruebas con "Listen for test event", cambia USE_TEST_WEBHOOK a true.
         // Para uso real desde GitHub Pages, publica/activa el workflow en n8n y deja USE_TEST_WEBHOOK en false.
-                const USE_TEST_WEBHOOK = false;
+        const USE_TEST_WEBHOOK = false;
         
         const N8N_WEBHOOK_TEST_URL = 'https://gaspachoai.app.n8n.cloud/webhook-test/gaspacho-web';
         const N8N_WEBHOOK_PROD_URL = 'https://gaspachoai.app.n8n.cloud/webhook/gaspacho-web';
@@ -345,7 +350,7 @@
         // --- EVENTO: PRESIONAR BOTÓN ---
         btnMic.addEventListener('click', () => {
             // Detener cualquier locución previa activa antes de escuchar de nuevo
-            if (synth.speaking) {
+            if (synth && synth.speaking) {
                 synth.cancel();
             }
             
@@ -382,10 +387,11 @@
         // --- PROCESAMIENTO DEL RESULTADO (VOZ A TEXTO) ---
         recognition.onresult = async (event) => {
             const transcript = event.results[0][0].transcript;
-            textDisplay.innerText = `Tú: "${transcript}"`;
+            mostrarPreguntaUsuario(transcript);
             
             // Pasamos al estado de procesamiento
             changeState('thinking');
+            setStatus("Procesando consulta con n8n...");
             btnMic.innerText = "Procesando...";
 
             // Enviar la pregunta capturada a n8n
@@ -422,6 +428,10 @@
                 }
 
                 const data = await response.json();
+
+                if (data && data.ok === false) {
+                    throw new Error(data.error || 'n8n devolvió ok=false');
+                }
 
                 const respuestaIA =
                     data.respuesta ||
